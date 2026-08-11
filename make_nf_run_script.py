@@ -37,6 +37,7 @@ self_path = os.path.dirname(os.path.realpath(__file__))
 template_path = os.path.join(self_path, "run_script_templates")
 config_path = os.path.join(self_path, "config", "analysis.config")
 extra_args = ""
+ref_dir = ""
 
 resolved_env_path = os.path.realpath(environment_path)
 
@@ -44,9 +45,15 @@ resolved_env_path = os.path.realpath(environment_path)
 for d in [scripts_path, logs_path]:
     os.system(f"mkdir -p {d}")
 
-# Handle gencode for GRCh38
+# Handle updated references for GRCh38
 if pipeline == 'rnaseq' and genome == 'GRCh38':
-    extra_args = "--gencode"
+    extra_args = ("--fasta ${REFDIR}/Homo_sapiens.GRCh38.dna_sm.primary_assembly.fa \\\n"
+        "    --gtf ${REFDIR}/Homo_sapiens.GRCh38.115.gtf \\\n"
+        "    --gene_bed ${REFDIR}/Homo_sapiens.GRCh38.115.bed \\\n"
+        "    --transcript_fasta ${REFDIR}/genome.transcripts.fa \\\n"
+        "    --star_index ${REFDIR}/index/star"
+    )
+    ref_dir = "export REFDIR=/proj/ngi2016001/nobackup/NGI/ANALYSIS/references/GRCh38/latest_rnaseq/genome/"
 # Handle GRCh38 iGenome for sarek
 if pipeline == 'sarek' and genome == 'GRCh38':
     genome = "GATK.GRCh38"
@@ -76,18 +83,24 @@ if pipeline == 'methylseq':
 os.system(f"cp {template_path}/{pipeline}_template {scripts_path}/run_analysis.sh")
 
 # Add project and genome to template
-sed_cmd = "sed -i"
-for srch, rplc in [
-  ("_ENVPATH_", resolved_env_path),
-  ("_PROJECT_", project),
-  ("_GENOME_", genome),
-  ("_ANALYSISDIR_", analysis_path),
-  ("_DATADIR_", data_path),
-  ("_CONFIG_", f"-c {config_path}"),
-  ("_EXTRAARGS_", f"{extra_args}")]:
-    sed_cmd = f"{sed_cmd} -e 's#{srch}#{rplc}#g'"
+with open(f"{scripts_path}/run_analysis.sh") as f:
+    script = f.read()
 
-os.system(f"{sed_cmd} {scripts_path}/run_analysis.sh")
+for srch, rplc in {
+    "_ENVPATH_": resolved_env_path,
+    "_PROJECT_": project,
+    "_GENOME_": genome,
+    "_ANALYSISDIR_": analysis_path,
+    "_DATADIR_": data_path,
+    "_CONFIG_": f"-c {config_path}",
+    "_REFDIR_": ref_dir,
+    "_EXTRAARGS_": extra_args,
+}.items():
+    script = script.replace(srch, rplc)
+
+with open(f"{scripts_path}/run_analysis.sh", "w") as f:
+    f.write(script)
+
 
 # Set up parameters for sarek run in a separate json file
 # Could be implemented for rnaseq but not the methylseq version that we use
