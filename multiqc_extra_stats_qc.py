@@ -97,7 +97,7 @@ def find_reports(analysis_dir):
         "mosdepth_sum": os.path.join(report_folder, "mosdepth/*/*.md.mosdepth.summary.txt"),
         "mosdepth_reg": os.path.join(report_folder, "mosdepth/*/*.md.mosdepth.region.dist.txt"),
         "samstat": os.path.join(report_folder, "samtools/*/*.md.cram.stats"),
-        "snpeff": os.path.join(report_folder, "snpeff/haplotypecaller/*/*_snpEff.csv")
+	"snpeff": os.path.join(report_folder, "snpeff/deepvariant/*/*_snpEff.csv")
     }
     
     report_paths = {
