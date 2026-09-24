@@ -70,7 +70,6 @@ INPUT_DIRS=$(for sample in $(cat $mqc_content/sample_names.txt); do
       -path "*/reports/*"
   done | sort -u | paste -s -d' ')
 INPUT_DIRS+=" $mqc_content"
-
 QC_INPUT_DIRS="$INPUT_DIRS $qc_content"
 
 # submit MultiQC jobs to SLURM
